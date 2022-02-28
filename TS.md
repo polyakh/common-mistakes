@@ -1,3 +1,79 @@
+[#### **Better validations with `includes` and selector function](https://obaranovskyi.medium.com/top-5-techniques-in-typescript-to-bring-your-code-to-the-next-level-6f20be543b39#7cec)
+We have a function that compares the same object property with multiple values of the same type and returns true in case
+if at least one statement is positive.
+
+```typescript
+// ❌ Problem:
+enum UserStatus {
+    Administrator = 1,
+    Editor = 4,
+}
+
+interface User {
+    firstName: string;
+    lastName: string;
+    status: UserStatus;
+}
+
+const isEditActionAvailable = (user: User): boolean => (user.status === UserStatus.Administrator ||
+    user.status === UserStatus.Editor);
+
+// ✅ Solution:
+enum TeamStatus {
+    Lead = 1,
+    Manager = 2,
+}
+
+interface TeamUser extends User {
+    teamStatus: TeamStatus;
+}
+
+function roleCheck<D, T>(selector: (data: D) => T, roles: T[]): (value: D) => boolean {
+    return (value: D) => roles.includes(selector(value));
+}
+
+const MANAGER_OR_LEAD = [
+    TeamStatus.Lead,
+    TeamStatus.Manager
+]
+
+const isManagerOrLead = roleCheck((user: User) => user.teamStatus, MANAGER_OR_LEAD);
+```
+
+[#### Use callbacks to encapsulate code that changes](https://obaranovskyi.medium.com/top-5-techniques-in-typescript-to-bring-your-code-to-the-next-level-6f20be543b39#f5d8)
+We have multiple functions that are pretty similar, with a minor difference.
+
+```typescript
+async function makeUserAction(fn: Function): Promise<void> {
+    LoadingService.startLoading();
+    await fn();
+    LoadingService.stopLoading();
+    UserGrid.reloadData();
+}
+
+async function createUser2(user: User): Promise<void> {
+    makeUserAction(() => userHttpClient.createUser(user));
+}
+
+async function updateUser2(user: User): Promise<void> {
+    makeUserAction(() => userHttpClient.updateUser(user));
+}
+```
+
+[#### Consider using predicate combinators(combinator predicates with factories)](https://obaranovskyi.medium.com/top-5-techniques-in-typescript-to-bring-your-code-to-the-next-level-6f20be543b39#7cec)
+
+```typescript
+const isEditor = (user: User) => user.role === UserRole.Editor;
+const isGreaterThan17 = (user: User) => user.age > 17;
+const isRole = (role: UserRole) =>
+    (user: User) => user.role === role;
+const isWriter = isRole(UserRole.Writer)
+const greaterThan17AndWriterOrEditor = users.filter(
+    and(isGreaterThan(17), or(isWriter, isRole(UserRole.Editor)))
+);
+
+```
+
 [#### Types vs. interfaces in TypeScript](https://blog.logrocket.com/types-vs-interfaces-in-typescript/)
 Interface work better with objects and method objects, and types are better to work with functions, complex types, etc.
 Type:
