@@ -134,3 +134,80 @@ const ListItemEX2 = memo(({isSelected, title}) => {
     return <p>{title}</p>
 })
 ```
+
+[#### Use maps over if/else](https://isamatov.com/simple-tips-for-writing-clean-react-components/#use-maps-over-ifelse)
+
+```typescript jsx
+const Student = ({name}) => <p>Student name: {name}</p>
+const Teacher = ({name}) => <p>Teacher name: {name}</p>
+const Guardian = ({name}) => <p>Guardian name: {name}</p>
+// ❌ Problem:
+const SampleComponent = ({user}) => {
+    let Component = Student;
+    if (user.type === 'teacher') {
+        Component = Teacher
+    } else if (user.type === 'guardian') {
+        Component = Guardian
+    }
+    return <Component name={user.name}/>
+}
+
+// ✅ Solution:
+const COMPONENT_MAP = {
+    student: Student,
+    teacher: Teacher,
+    guardian: Guardian
+}
+const SampleComponentSolution = ({user}) => {
+    let Component = Student;
+    if (user.type === 'teacher') {
+        Component = Teacher
+    } else if (user.type === 'guardian') {
+        Component = Guardian
+    }
+    return <Component name={user.name}/>
+}
+```
+
+[#### Splitting components => Use wrappers](https://isamatov.com/simple-tips-for-writing-clean-react-components/#splitting-components)
+
+```typescript jsx
+// ❌ Problem:
+const DraggableSample = () => {
+    const handleDragStart = (result) => console.log({result});
+    const handleDragUpdate = ({destination}) => console.log({destination});
+    const handleDragEnd = ({source, destination}) => console.log({source, destination});
+    return (
+        <DragDropContext
+            onDragEnd={handleDragEnd}
+            onDragStart={handleDragStart}
+            onDragUpdate={handleDragUpdate}
+        >
+            <Droppable droppableId="droppable" direction="horizontal">
+                {(provided) => <div {...provided.droppableProps} ref={provided.innerRef}>
+                    {columns.map((column, index) => <ColumnComponent key={index} column={column}/>)}
+                </div>}
+            </Droppable>
+        </DragDropContext>
+    )
+}
+// ✅ Solution:
+const DraggableSampleExl2 = () => <DragWrapper>
+    {columns.map((column, index) => <ColumnComponent key={index} column={column}/>)}
+</DragWrapper>
+const DragWrapper = ({children}) =>
+    // ... handlers All the functionality for drag-and-drop lives in the wrapper and is much easier to reason about.
+    <DragDropContext
+        onDragEnd={handleDragEnd}
+        onDragStart={handleDragStart}
+        onDragUpdate={handleDragUpdate}
+    >
+        <Droppable droppableId="droppable" direction="horizontal">
+            {(provided) => (
+                <div {...provided.droppableProps} ref={provided.innerRef}>
+                    {children}
+                </div>
+            )}
+        </Droppable>
+    </DragDropContext>
+```
