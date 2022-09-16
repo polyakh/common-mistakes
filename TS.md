@@ -295,7 +295,7 @@ Greet.defaultProps = defaultProps;
 
 [#### Consuming Props of a Component with defaultProps](https://react-typescript-cheatsheet.netlify.app/docs/basic/getting-started/default_props/#consuming-props-of-a-component-with-defaultprops)
 
-```typescript
+```tsx
 type ComponentProps<T> = T extends | React.ComponentType<infer P>
     | React.Component<infer P>
     ? JSX.LibraryManagedAttributes<T, P>
@@ -326,5 +326,44 @@ displayName.
 
 FC also provides an implicit type for children prop which also have known issues. Also, as discussed earlier a component
 API should be explicit so an implicit type for children prop is not the best.
+
+
+[#### Type Refinement and Disjoint Unions](https://onesignal.com/blog/effective-typescript-for-react-applications/#type-refinement-and-disjoint-unions)
+Support multiple variants of a shared interface.
+Although this component compiles, the type definition of props doesn’t inform the TypeScript compiler when specialPrimaryMethod is permitted.
+```typescript jsx
+// ❌ Problem:
+type ButtonKind = "primary" | "secondary";
+interface Props extends React.ComponentPropsWithoutRef<"button"> {
+  kind: ButtonKind;
+  specialPrimaryMethod?: () => void;
+}
+// Correct use-case
+<Button kind="primary" specialPrimaryMethod={doSpecial}>...
+
+// Invalid use-case: specialPrimaryMethod shouldn't be optional
+<Button kind="primary">...
+
+// Invalid use-case: secondary shouldn't support specialPrimaryMethod
+<Button kind="secondary" specialPrimaryMethod={doSpecial}>...
+```
+
+This is where the disjoint union comes in handy. By splitting apart the interfaces for the “primary” variant and the “secondary” variant, you can achieve better compile-time type-checking.
+// ✅ Solution:
+```typescript jsx
+interface PrimaryButton {
+  kind: "primary";
+  specialPrimaryMethod: () => void;
+}
+
+interface SecondaryButton {
+  kind: "secondary";
+}
+// Create a disjoint union
+type Button = PrimaryButton | SecondaryButton;
+
+// Add built-in HTML props to the disjoin union
+type Props = React.ComponentPropsWithoutRef<"button"> & Button;
+```
 
 Links:
